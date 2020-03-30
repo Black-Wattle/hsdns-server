@@ -1,0 +1,35 @@
+{
+  "dependencies": {
+    "bns": "^0.11.0",
+    "dotenv": "^8.2.0",
+    "hs-client": "^0.0.8",
+    "micro": "^9.3.4",
+    "micro-cors": "^0.1.1",
+    "micro-dev": "^3.0.0",
+    "microrouter": "^3.1.3",
+    "redis": "^3.0.2"
+  },
+  "name": "hsd-multizone-dns",
+  "version": "1.0.0",
+  "description": "Multi-zone authorative DNS server aimed at Handshake domains",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "micro",
+    "dev": "micro-dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "hsd",
+    "hns",
+    "handshake",
+    "redis",
+    "dns",
+    "nameserver"
+  ],
+  "author": "Lewi",
+  "license": "ISC"
+}
