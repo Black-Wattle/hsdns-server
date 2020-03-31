@@ -45,6 +45,8 @@ const zoneGet = async (req, res) => {
   try {
     // Verify Domain & Token
     await verifyOwnership(response.zone, response.token)
+    console.log('authd')
+
     // RM settings
     const obj = { [response.zone]: true }
     const records = await getZones(obj)
@@ -164,14 +166,15 @@ const add = async (req, res) => {
     const recordID = crypto.randomBytes(10).toString('hex')
 
     // Add record to zone
+    const result = await DNS.addRecord(response.zone, response.record)
+
+    // Add record to zone
     await Redis.hmset(
       'zone:records:' + response.zone,
       recordID,
       response.record
     )
 
-    // Add record to zone
-    const result = await DNS.addRecord(response.zone, response.record)
     return send(res, 201, { success: true, record: recordID })
   } catch (e) {
     return sendError(res, e)
@@ -232,6 +235,7 @@ const resolve = async (req, res) => {
 const verifyOwnership = async (zone, token) => {
   // Get name's info
   const zoneInfo = await Redis.hgetall('zone:' + zone)
+
   // Resolve zone's TXT
   const resolved = await DNS.resolve(zone + '.', 'TXT') // Change this to TXT
 
@@ -249,7 +253,7 @@ const verifyOwnership = async (zone, token) => {
 
   // Check if the HSD has the verifcation TXT (CHANGE ME)
   if (!record)
-    throw 'No verification record found. Make sure it was added or wait a while for the Urkle tree to update.'
+    throw 'Unable to verify you own the domain. \nMake your record was entered in the Urkle tree.'
 
   // If there is challenge info check to see if there is a rightful owner
   if (zoneInfo.challenge) {
@@ -260,6 +264,7 @@ const verifyOwnership = async (zone, token) => {
     if (owner) {
       console.log('Owner Found')
       const setZoneRecord = await Redis.hmset('zone', zone, true)
+      const setUserRecord = await Redis.hmset('user:' + owner.token, zone, true)
       const setToken = await Redis.hmset('zone:' + zone, 'token', owner.token)
       const setTxt = await Redis.hmset('zone:' + zone, 'txt', owner.txt)
       const rmChallenge = await Redis.hdel('zone:' + zone, 'challenge')
@@ -299,8 +304,8 @@ module.exports = cors(
     post('/zone-info', zoneGet), // Get zone info
     post('/zone-add', zoneAdd), // Add a new zone
     post('/zone-remove', zoneRemove), // Remove a whole zone
-    post('/add', add), // Add a new record
-    post('/remove', remove), // Remove a record
+    post('/record-add', add), // Add a new record
+    post('/record-remove', remove), // Remove a record
     get('/resolve/:name/:type', resolve) // Resolve a HSD name
   )
 )
